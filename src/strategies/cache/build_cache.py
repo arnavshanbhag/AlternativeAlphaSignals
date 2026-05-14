@@ -10,7 +10,7 @@ trend_frames = []
 
 for t in tickers:
     try:
-        pytrends.build_payload([t], timeframe="today 5-y")
+        pytrends.build_payload([t], timeframe="today 12-m")
         df = pytrends.interest_over_time()
 
         if df.empty:

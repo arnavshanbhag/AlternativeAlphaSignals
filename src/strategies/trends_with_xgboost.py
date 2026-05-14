@@ -24,17 +24,10 @@ combined = combined.drop_duplicates(
     keep="last"
 )
 
-# --------------------------------------------------
-# 1. SAVE UPDATED CACHE
-# --------------------------------------------------
 
 combined.to_csv("google_trends_cache.csv", index=False)
 
 print("Cache updated. Total rows:", len(combined))
-
-# --------------------------------------------------
-# 2. STOCK DATA
-# --------------------------------------------------
 
 tickers = ["AAPL", "MSFT", "AMZN", "GOOGL", "META", "AMD", "TSLA", "LLY"]
 
@@ -48,9 +41,6 @@ ma_20 = prices.rolling(20).mean()
 ma_gap = prices / ma_20 - 1
 target = returns.shift(-1)
 
-# --------------------------------------------------
-# 3. BUILD FEATURE DATASET
-# --------------------------------------------------
 
 df_list = []
 
@@ -72,17 +62,10 @@ for t in tickers:
 df = pd.concat(df_list).dropna()
 df["date"] = pd.to_datetime(df["date"]).dt.normalize()
 
-# --------------------------------------------------
-# 4. MERGE CACHED TRENDS
-# --------------------------------------------------
-
 df = df.merge(trend_df, on=["date", "ticker"], how="left")
 
 df["trend"] = df["trend"].fillna(0)
 
-# --------------------------------------------------
-# 5. FEATURES
-# --------------------------------------------------
 
 features = [
     "return",
@@ -96,18 +79,11 @@ features = [
 X = df[features]
 y = df["target"]
 
-# --------------------------------------------------
-# 6. TRAIN / TEST SPLIT
-# --------------------------------------------------
 
 split = int(len(df) * 0.8)
 
 X_train, X_test = X.iloc[:split], X.iloc[split:]
 y_train, y_test = y.iloc[:split], y.iloc[split:]
-
-# --------------------------------------------------
-# 7. XGBOOST MODEL
-# --------------------------------------------------
 
 model = XGBRegressor(
     n_estimators=300,
@@ -123,9 +99,6 @@ model.fit(X_train, y_train)
 pred = model.predict(X_test)
 print(pred)
 
-# --------------------------------------------------
-# 8. TRADING STRATEGY
-# --------------------------------------------------
 signal = np.where(pred > 0.002, 1,
          np.where(pred < -0.002, -1, 0))
 print(signal)
@@ -134,10 +107,6 @@ strategy_returns = signal * y_test.values
 equity = (1 + strategy_returns).cumprod()
 print(equity)
 
-# --------------------------------------------------
-# 9. EVALUATION
-# --------------------------------------------------
-
 corr = np.corrcoef(pred, y_test)[0, 1]
 print("Prediction correlation:", corr)
 
@@ -145,10 +114,6 @@ plt.figure()
 plt.plot(equity)
 plt.title("Cached Google Trends + XGBoost Strategy")
 plt.show()
-
-# --------------------------------------------------
-# 1. DEFINE FEATURE COLUMNS (must match training)
-# --------------------------------------------------
 
 feature_cols = [
     "return",
@@ -159,36 +124,16 @@ feature_cols = [
     "trend"
 ]
 
-# --------------------------------------------------
-# 2. GET MOST RECENT DATA FOR EACH STOCK
-# --------------------------------------------------
-
 latest = df.sort_values("date").groupby("ticker").tail(1).copy()
-
-# --------------------------------------------------
-# 3. BUILD INPUT FEATURES FOR PREDICTION
-# --------------------------------------------------
 
 X_live = latest[feature_cols]
 
-# --------------------------------------------------
-# 4. PREDICT NEXT-DAY RETURNS
-# --------------------------------------------------
-
 latest["predicted_return_tomorrow"] = model.predict(X_live)
 
-# --------------------------------------------------
-# 5. CONVERT TO TRADING SIGNAL
-#    (long if positive, short if negative)
-# --------------------------------------------------
 
-latest["position"] = np.where(latest["predicted_return_tomorrow"] > 0.002, 1,
-         np.where(latest["predicted_return_tomorrow"] < -0.002, -1, 0))
+latest["position"] = np.where(latest["predicted_return_tomorrow"] > 0.005, 1,
+         np.where(latest["predicted_return_tomorrow"] < -0.005, -1, 0))
 
-
-# --------------------------------------------------
-# 6. OPTIONAL: CONFIDENCE-BASED SIZING
-# --------------------------------------------------
 
 latest["position_scaled"] = latest["predicted_return_tomorrow"] / (
     latest["vol_20"].replace(0, np.nan)
@@ -196,11 +141,7 @@ latest["position_scaled"] = latest["predicted_return_tomorrow"] / (
 
 latest["position_scaled"] = latest["position_scaled"].fillna(0)
 
-# --------------------------------------------------
-# 7. OUTPUT RESULTS
-# --------------------------------------------------
-
-print("\n📊 TOMORROW PREDICTIONS\n")
+print("\nTOMORROW PREDICTIONS\n")
 print(latest[[
     "ticker",
     "predicted_return_tomorrow",

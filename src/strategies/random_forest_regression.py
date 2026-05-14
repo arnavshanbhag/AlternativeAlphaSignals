@@ -43,18 +43,10 @@ features = ["return", "mom_5", "mom_20", "vol_20", "ma_gap"]
 X = df[features]
 y = df["target"]
 
-# ----------------------------
-# 1. TIME SPLIT
-# ----------------------------
-
 split = int(0.8 * len(df))
 
 X_train, X_test = X.iloc[:split], X.iloc[split:]
 y_train, y_test = y.iloc[:split], y.iloc[split:]
-
-# ----------------------------
-# 2. MODEL
-# ----------------------------
 
 model = RandomForestRegressor(
     n_estimators=200,
@@ -64,25 +56,13 @@ model = RandomForestRegressor(
 
 model.fit(X_train, y_train)
 
-# ----------------------------
-# 3. PREDICTIONS
-# ----------------------------
-
 y_pred = model.predict(X_test)
-
-# ----------------------------
-# 4. EVALUATION (SIGNAL QUALITY)
-# ----------------------------
 
 corr = np.corrcoef(y_pred, y_test)[0, 1]
 print("Prediction correlation:", corr)
 
 mse = mean_squared_error(y_test, y_pred)
 print("MSE:", mse)
-
-# ----------------------------
-# 5. SIMPLE TRADING STRATEGY
-# ----------------------------
 
 signal = np.where(y_pred > 0, 1, -1)
 strategy_returns = signal * y_test.values

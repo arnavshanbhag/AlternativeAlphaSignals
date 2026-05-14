@@ -9,3 +9,16 @@ Our goal is to generate significant alpha signals from alternative data, such as
 We will train models on old data then apply our model to new data and track our profits/losses for different 
 trading strategies.
 
+We focus on a small subset of stocks to keep the model simple, some more volatile than others:
+- Nvidia
+- Apple
+- Microsoft
+- AMD (Advanced Micro Devices)
+- Tesla
+- Eli Lilly and Company
+- Amazon
+- Alphabet Inc. (Google)
+- Meta
+- Lithium America Corp.
+
+
