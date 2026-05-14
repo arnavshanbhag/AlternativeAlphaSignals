@@ -4,11 +4,8 @@ import yfinance as yf
 from xgboost import XGBRegressor
 import matplotlib.pyplot as plt
 
-# --------------------------------------------------
-# 1. LOAD EXISTING CACHE (if it exists)
-# --------------------------------------------------
 
-trend_df = pd.read_csv("src/strategies/cache/build_cache.py")
+trend_df = pd.read_csv("src/strategies/cache/google_trends_cache.csv")
 trend_df["date"] = pd.to_datetime(trend_df["date"]).dt.normalize()
 try:
     old = pd.read_csv("google_trends_cache.csv")
@@ -16,17 +13,9 @@ try:
 except FileNotFoundError:
     old = pd.DataFrame(columns=["date", "ticker", "trend"])
 
-# --------------------------------------------------
-# 2. NEW DATA (from your latest run)
-#    assumes you already created trend_df
-# --------------------------------------------------
 
 new = trend_df.copy()
 new["date"] = pd.to_datetime(new["date"]).dt.normalize()
-
-# --------------------------------------------------
-# 3. COMBINE + DEDUPLICATE
-# --------------------------------------------------
 
 combined = pd.concat([old, new], ignore_index=True)
 
@@ -36,7 +25,7 @@ combined = combined.drop_duplicates(
 )
 
 # --------------------------------------------------
-# 4. SAVE UPDATED CACHE
+# 1. SAVE UPDATED CACHE
 # --------------------------------------------------
 
 combined.to_csv("google_trends_cache.csv", index=False)
@@ -137,7 +126,6 @@ print(pred)
 # --------------------------------------------------
 # 8. TRADING STRATEGY
 # --------------------------------------------------
-#signal = np.where(pred > 0, 1, -1)
 signal = np.where(pred > 0.002, 1,
          np.where(pred < -0.002, -1, 0))
 print(signal)
