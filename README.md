@@ -21,4 +21,5 @@ We focus on a small subset of stocks to keep the model simple, some more volatil
 - Meta
 - Lithium America Corp.
 
+Sharpe Ratio of portfolio ~ 1.8 (July 2026)
 
